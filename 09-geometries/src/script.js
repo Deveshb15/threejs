@@ -87,10 +87,6 @@ const tick = () =>
     // Update controls
     controls.update()
 
-    // camera
-    camera.position.x = Math.tan(elapsedTime)
-    camera.position.y = Math.tan(elapsedTime)
-
     // Render
     renderer.render(scene, camera)
 
