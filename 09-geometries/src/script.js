@@ -12,8 +12,31 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 
 // Object
-const geometry = new THREE.BoxGeometry(1, 1, 1)
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+// const geometry = new THREE.BoxBufferGeometry(1, 1, 1, 2, 2, 2)
+
+// custom buffer geometry
+const geometry = new THREE.BufferGeometry()
+
+// const positionsArray = new Float32Array([
+//     0, 0, 0,
+//     0, 1, 0,
+//     1, 0, 0
+// ])
+
+let count = 50
+const positionsArray = new Float32Array(count * 3 * 3)
+for(let i = 0; i < count *3 * 3; i++){
+    positionsArray[i] = (Math.random() - 0.5) * 4
+}
+
+const positionsAttribute = new THREE.BufferAttribute(positionsArray , 3)
+
+geometry.setAttribute('position', positionsAttribute)
+
+const material = new THREE.MeshBasicMaterial({ 
+    color: 0xff0000,
+    wireframe: true
+})
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
@@ -40,7 +63,7 @@ window.addEventListener('resize', () =>
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.z = 3
+camera.position.z = 0
 scene.add(camera)
 
 // Controls
@@ -63,6 +86,10 @@ const tick = () =>
 
     // Update controls
     controls.update()
+
+    // camera
+    camera.position.x = Math.tan(elapsedTime)
+    camera.position.y = Math.tan(elapsedTime)
 
     // Render
     renderer.render(scene, camera)
