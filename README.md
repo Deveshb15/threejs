@@ -13,3 +13,5 @@
 **[08-Fullscreen-and-resizing](https://github.com/Deveshb15/threejs/tree/08-Fullscreen-and-resizing)**
 
 **[09-Geometries](https://github.com/Deveshb15/threejs/tree/09-Geometries)**
+
+**[10-Debug-UI](https://github.com/Deveshb15/threejs/tree/10-Debug-UI)**
