@@ -2,6 +2,29 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+
+/**
+ * Textures
+ */
+const loadingManager = new THREE.LoadingManager()
+const textureLoader = new THREE.TextureLoader(loadingManager)
+// const colorTexture = textureLoader.load('/textures/door/color.jpg')
+// const colorTexture = textureLoader.load('/textures/checkerboard-8x8.png')
+const colorTexture = textureLoader.load('/textures/minecraft.png')
+
+// colorTexture.repeat.x = 2
+// colorTexture.repeat.y = 3
+// colorTexture.wrapS = THREE.RepeatWrapping
+// colorTexture.wrapT = THREE.RepeatWrapping
+// colorTexture.offset.x = 0.5
+// colorTexture.rotation = elapsedTime
+// colorTexture.rotation = Math.PI * 0.25
+// colorTexture.center.x = 0.5
+// colorTexture.center.y = 0.5
+colorTexture.generateMipmaps = false
+colorTexture.minFilter = THREE.NearestFilter
+colorTexture.magFilter = THREE.NearestFilter
+
 /**
  * Base
  */
@@ -15,7 +38,7 @@ const scene = new THREE.Scene()
  * Object
  */
 const geometry = new THREE.BoxBufferGeometry(1, 1, 1)
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+const material = new THREE.MeshBasicMaterial({ map: colorTexture })
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
@@ -79,6 +102,7 @@ const tick = () =>
 
     // Render
     renderer.render(scene, camera)
+
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
