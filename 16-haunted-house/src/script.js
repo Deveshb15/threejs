@@ -18,7 +18,7 @@ const scene = new THREE.Scene()
 
 // Fog
 const fog = new THREE.Fog('#262837', 1, 15)
-scene.fog = fog
+// scene.fog = fog
 
 /**
  * Textures
@@ -198,6 +198,29 @@ scene.add(moonLight)
 const doorLight = new THREE.PointLight('#ff7d46', 1, 7)
 doorLight.position.set(0, 2.2, 2.7)
 house.add(doorLight)
+
+/**
+ * Bones
+ */
+const bones = [];
+
+const shoulder = new THREE.Bone();
+const elbow = new THREE.Bone();
+const hand = new THREE.Bone();
+
+shoulder.add( elbow );
+elbow.add( hand );
+
+bones.push( shoulder );
+bones.push( elbow );
+bones.push( hand );
+
+shoulder.position.y = -5;
+elbow.position.y = 0;
+hand.position.y = 5;
+
+const armSkeleton = new THREE.Skeleton( bones );
+scene.add(armSkeleton)
 
 /**
  * Ghosts
