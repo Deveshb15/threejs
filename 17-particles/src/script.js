@@ -2,6 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
+import { PositionalAudio } from 'three'
 
 /**
  * Base
@@ -20,14 +21,48 @@ const scene = new THREE.Scene()
  */
 const textureLoader = new THREE.TextureLoader()
 
+const particleTexture = textureLoader.load('/textures/particles/2.png')
+
 /**
- * Test cube
+ * Particles
  */
-const cube = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial()
+// Geometry
+const particleGeometry = new THREE.BufferGeometry()
+const count = 5000
+
+const positions = new Float32Array(count * 3)
+const colors = new Float32Array(count * 3)
+
+for(let i = 0; i < count*3; i++){
+    positions[i] = (Math.random() - 0.5) * 10
+    colors[i] = Math.random()
+}
+
+particleGeometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(positions, 3)
 )
-scene.add(cube)
+particleGeometry.setAttribute(
+    'color',
+    new THREE.BufferAttribute(colors, 3)
+)
+
+// Material
+const particleMaterial = new THREE.PointsMaterial({
+    size: 0.1,
+    sizeAttenuation: true,
+    transparent: true,
+    alphaMap: particleTexture,
+    // alphaTest: 0.001
+    // depthTest: false
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true
+})
+
+// Points
+const particles = new THREE.Points(particleGeometry, particleMaterial)
+scene.add(particles)
 
 /**
  * Sizes
@@ -81,6 +116,16 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+
+    // Update Particles
+    // particles.rotation.y = elapsedTime * 0.2
+    for(let i = 0; i < count; i++){
+        const i3 = i*3
+
+        const x = particleGeometry.attributes.position.array[i3]
+        particleGeometry.attributes.position.array[i3+1] = Math.sin(elapsedTime+x)
+    }
+    particleGeometry.attributes.position.needsUpdate = true
 
     // Update controls
     controls.update()
