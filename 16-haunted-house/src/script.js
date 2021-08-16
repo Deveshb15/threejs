@@ -320,6 +320,140 @@ ghost3.shadow.camera.far = 7
 
 
 
+// Skeleton arm
+const light1 = new THREE.PointLight(0xffffff,1,0); 
+light1.position.set( -100, 300, 1000 ); 	
+scene.add(light1);
+
+const geometryNeck =  new THREE.SphereBufferGeometry(10, 6, 6);  
+const rSegmentCount = 8; // radial segments 
+const bodyHeight =   80; // body: LatheGeometry
+const boneBodyCount 		=  3;		
+const boneBodySegCount 	=  3;      
+const bodySegHeightCount	=  boneBodySegCount * boneBodyCount; // segments total
+const boneBodyHeight		=  bodyHeight / boneBodyCount ;	
+const outlineBody = [			
+ [0.01,-bodyHeight ],[20,-78],[35,-74],[42,-65],[45,-55],[44,-45],[30,-27],[10,0] //  from -bodyHeight to 0
+];	
+const pointsBody = [];   // Vector2 points  x,y
+for ( let i = 0; i < outlineBody.length ; i++ ) {
+    pointsBody.push(new THREE.Vector2(outlineBody[i][0], outlineBody[i][1]))
+}
+
+const geometryBody = new THREE.LatheGeometry( pointsBody, rSegmentCount );  
+skinIndexWeigtLatheBody(); 	// function
+//---
+const limbRadius	    	=  4;
+const limbHeight    		= 60;
+const boneLimbCount		=  3; 
+const boneLimbSegCount	=  1;				
+const limbRadSegCount		=  6; // or 0.5*rSegmentCount; 	
+const limbHeightSegCount	=  boneLimbSegCount*boneLimbCount;
+const boneLimbHeight		= limbHeight/ boneLimbCount ;	
+const limbHalfHeight		= limbHeight * 0.5;	
+const openEnded     = false; 			
+const geometryLimbs = [];
+for (let i=0; i<2;i++){  // 2 limbs
+    geometryLimbs[i] = new THREE.CylinderGeometry(limbRadius,limbRadius,limbHeight,limbRadSegCount,limbHeightSegCount,openEnded);
+}
+
+const bonesBody = createBones( 0 , -boneBodyHeight, boneBodyCount); // function
+const bonesLimbs = [];
+for (let i=0; i<2; i++){
+              // function
+    bonesLimbs[i] = createBones(-limbHalfHeight, boneLimbHeight, boneLimbCount); 
+}
+const material  = new THREE.MeshPhongMaterial({ color: 0x896215, emissive: 0xa96415, wireframe: true, skinning: true});	
+const meshNeck  = new THREE.Mesh(geometryNeck, material);
+const meshBody  = new THREE.SkinnedMesh(geometryBody, material );
+meshBody.add( meshNeck );	
+const geometrysLimbs = [];
+const meshesLimbs = [];
+for (let i=0; i<2; i++){
+	skinIndexWeightCylinder(geometryLimbs[i]);  	// function
+	meshesLimbs[i] =  new THREE.SkinnedMesh(geometryLimbs[i], material);
+}
+meshesLimbs[0].rotation.z =  1.57;   				// arm right 
+meshesLimbs[0].position.x = -limbHalfHeight;
+meshesLimbs[1].rotation.z =  -1.57;  				// arm left 
+meshesLimbs[1].position.x =  limbHalfHeight;	
+const skeletonBody = new THREE.Skeleton( bonesBody );		
+meshBody.add( bonesBody[ 0 ] );						
+meshBody.bind( skeletonBody );						
+scene.add( meshBody );
+const skeletonHelperBody = new THREE.SkeletonHelper( meshBody );  
+scene.add( skeletonHelperBody );
+const skeletonsLimbs = [];
+const skeletonHelperLimbs = [];
+for (let i=0; i<2; i++){
+	skeletonsLimbs[i] = new THREE.Skeleton( bonesLimbs[i] );	            
+	meshesLimbs[i].add( bonesLimbs[i][0] );								
+	meshesLimbs[i].bind( skeletonsLimbs[i] );								
+	meshBody.add( meshesLimbs[i] );
+	skeletonHelperLimbs[i] = new THREE.SkeletonHelper( meshesLimbs[i] );  
+	scene.add( skeletonHelperLimbs[i] );
+}
+//........................................................................
+animate();
+//........................................................................
+function skinIndexWeigtLatheBody(){
+	for ( var i =0; i<geometryBody.vertices.length; i++ ) {   
+		vertexY =  geometryBody.vertices[ i ].y ;           									// only  y dependet
+		const skinIndex = boneBodyCount-1 - Math.floor((i % bodySegHeightCount)/ boneBodySegCount) ;  // skin-index,  bone 0 top 	   
+		const skinWeight = ( (bodyHeight - vertexY)  %  boneBodyHeight ) / boneBodyHeight ;        	// weight
+		geometryBody.skinIndices.push( new THREE.Vector4(    skinIndex, skinIndex+1, 0, 0 ) );  // allocation (2 from max. 4 bones)
+		geometryBody.skinWeights.push( new THREE.Vector4( 1-skinWeight, skinWeight , 0, 0 ) );	
+	}
+}
+function skinIndexWeightCylinder(geometry){
+	for ( var i = 0; i < geometry.vertices.length; i ++ ) {        
+		const vertexY =  geometry.vertices[ i ].y  +  limbHalfHeight;				// only  y dependet
+		const skinIndex = Math.floor( vertexY  / boneLimbHeight );            	// bone 0: bottom  
+		const skinWeight = ( vertexY  % boneLimbHeight) /  boneLimbHeight;        // weight
+		geometry.skinIndices.push( new THREE.Vector4(    skinIndex, skinIndex+1, 0, 0 ) );  // allocation (2 from max. 4 bones)
+		geometry.skinWeights.push( new THREE.Vector4( 1-skinWeight, skinWeight , 0, 0 ) );
+	}
+}
+function createBones(positionY, height, boneCount){
+    const bones = [];                   // base: bone 0
+	const basicBone = new THREE.Bone(); // base bone, length 0, not visible
+	bones.push( basicBone );          
+	basicBone.position.y = positionY; 
+	const prevBone = basicBone; 	    	  // previous bone for further
+	for ( var i = 1; i < boneCount+1 ; i ++ ) {
+		bone = prevBone.clone();             	
+		bone.position.y = height;  // at the right distance ...
+		bones.push( bone );		   //   lay down
+		prevBone.add( bone ); 	   //  ... each to the previous bone
+		prevBone = bone;		   // new previous bone       
+	}
+	return bones;
+}
+function animate() {
+	requestAnimationFrame( animate );
+	var time =  clock.getElapsedTime();  	
+	if ( document.getElementById("move").checked) {  // HTML: <input type="checkbox" id="move"> move         				
+		for ( var i = 1; i < meshBody.skeleton.bones.length - 2; i ++ ) {		
+			meshBody.skeleton.bones[ i ].rotation.z = 0.5*Math.sin( 1.8*time ) / meshBody.skeleton.bones.length;			
+		}		
+		for ( var i = 1; i < boneLimbCount+1; i++ ) {
+			meshesLimbs[0].skeleton.bones[ i ].rotation.x = 0.6*Math.cos( 1.2*time ) / boneLimbCount;	
+			meshesLimbs[0].skeleton.bones[ i ].rotation.z = 0.6*Math.sin( 1.2*time ) / boneLimbCount;	
+			meshesLimbs[1].skeleton.bones[ i ].rotation.x = 0.6*Math.cos( 1.2*time ) / boneLimbCount;	
+			meshesLimbs[1].skeleton.bones[ i ].rotation.z = 0.6*Math.sin( 3.14+1.2*time ) / boneLimbCount;
+		}
+		meshNeck.rotation.x = -0.20*(0.8+Math.sin( -1.57+1.2*time )); 			
+		meshNeck.rotation.y = -0.15*(0.6+Math.sin( -1.57+1.9*time ));
+		meshBody.rotation.x = 0.2;	
+		skeletonHelperBody.update();
+		for ( var j = 0; j < 2; j++ ){ 
+			skeletonHelperLimbs[j].update(); 
+		}	
+	} 
+	renderer.render( scene, camera );
+}
+
+
 /**
  * Animate
  */
