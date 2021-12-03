@@ -1,4 +1,4 @@
-# Links to all the Lessons
+# Links to all the exercises
 
 **[03-Basic Scene](https://github.com/Deveshb15/threejs/tree/03-basic-scene)**
 
